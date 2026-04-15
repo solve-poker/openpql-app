@@ -1,0 +1,24 @@
+[package]
+name = "open-pql-daemon"
+version = "0.1.0"
+edition = "2024"
+description = "HTTP/WebSocket daemon exposing the Open PQL runner to a web UI"
+
+[[bin]]
+name = "open-pql-daemon"
+path = "src/main.rs"
+
+[dependencies]
+openpql-runner = { path = "../../open-pql/openpql-runner" }
+openpql-pql-parser = { path = "../../open-pql/openpql-pql-parser" }
+openpql-range-parser = { path = "../../open-pql/openpql-range-parser" }
+openpql-prelude = { path = "../../open-pql/openpql-prelude", features = ["serde"] }
+
+axum = { version = "0.7", features = ["ws", "macros"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time"] }
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1"

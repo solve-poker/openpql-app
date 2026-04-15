@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+.cm-editor { height: 100%; }
+.cm-scroller { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
