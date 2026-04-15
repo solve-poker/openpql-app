@@ -15,3 +15,9 @@ export async function apiValidateRange(game: string, text: string) {
   });
   return r.json();
 }
+
+export async function apiGames(): Promise<string[]> {
+  const r = await fetch("/api/games");
+  const j = await r.json();
+  return j.games ?? [];
+}

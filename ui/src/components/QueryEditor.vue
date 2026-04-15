@@ -6,7 +6,7 @@ import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { bracketMatching } from "@codemirror/language";
 import { pqlLang } from "../pql/highlight";
 
-const props = defineProps<{ modelValue: string }>();
+const props = defineProps<{ modelValue: string; readonly?: boolean }>();
 const emit = defineEmits<{ (e: "update:modelValue", v: string): void }>();
 
 const root = ref<HTMLDivElement | null>(null);
@@ -24,6 +24,8 @@ onMounted(() => {
         bracketMatching(),
         pqlLang,
         keymap.of([...defaultKeymap, ...historyKeymap]),
+        EditorState.readOnly.of(!!props.readonly),
+        EditorView.editable.of(!props.readonly),
         EditorView.theme({
           "&": { backgroundColor: "#0f172a", color: "#e2e8f0" },
           ".cm-gutters": { backgroundColor: "#0f172a", color: "#64748b", border: "none" },

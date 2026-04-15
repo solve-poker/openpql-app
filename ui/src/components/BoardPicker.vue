@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 const RANKS = ["A","K","Q","J","T","9","8","7","6","5","4","3","2"];
 const SUITS = [
@@ -9,13 +9,16 @@ const SUITS = [
   { s: "c", label: "♣", cls: "text-emerald-400" },
 ];
 
-const SLOTS = ["hero", "villain", "flop1", "flop2", "flop3", "turn", "river"] as const;
+const SLOTS = ["flop1", "flop2", "flop3", "turn", "river"] as const;
 type Slot = typeof SLOTS[number];
+
+const props = defineProps<{ modelValue: string }>();
+const emit = defineEmits<{ (e: "update:modelValue", v: string): void }>();
 
 const assigned = ref<Record<Slot, string | null>>(
   Object.fromEntries(SLOTS.map((s) => [s, null])) as Record<Slot, string | null>,
 );
-const active = ref<Slot>("hero");
+const active = ref<Slot>("flop1");
 
 const usedSet = computed(() => new Set(Object.values(assigned.value).filter(Boolean) as string[]));
 
@@ -25,20 +28,30 @@ function pick(card: string) {
   emitValue();
 }
 function clearSlot(s: Slot) { assigned.value[s] = null; emitValue(); }
-
-const emit = defineEmits<{ (e: "update", v: { hero: string; villain: string; board: string }): void }>();
-function emitValue() {
-  const hero = assigned.value.hero ?? "";
-  const villain = assigned.value.villain ?? "";
-  const board = [assigned.value.flop1, assigned.value.flop2, assigned.value.flop3,
-    assigned.value.turn, assigned.value.river].filter(Boolean).join("");
-  emit("update", { hero, villain, board });
+function clearAll() {
+  for (const s of SLOTS) assigned.value[s] = null;
+  emitValue();
 }
+
+function emitValue() {
+  const board = SLOTS.map((s) => assigned.value[s]).filter(Boolean).join("");
+  emit("update:modelValue", board);
+}
+
+watch(() => props.modelValue, (v) => {
+  const current = SLOTS.map((s) => assigned.value[s]).filter(Boolean).join("");
+  if (v === current) return;
+  for (const s of SLOTS) assigned.value[s] = null;
+  const cards = (v || "").match(/.{1,2}/g) ?? [];
+  cards.slice(0, SLOTS.length).forEach((card, i) => {
+    assigned.value[SLOTS[i]] = card;
+  });
+}, { immediate: true });
 </script>
 
 <template>
   <div class="flex flex-col gap-2">
-    <div class="flex gap-2 flex-wrap text-xs">
+    <div class="flex gap-2 flex-wrap text-xs items-center">
       <button v-for="s in SLOTS" :key="s"
         class="px-2 py-1 rounded border"
         :class="active === s ? 'bg-sky-600 border-sky-400' : 'bg-slate-900 border-slate-800'"
@@ -47,6 +60,8 @@ function emitValue() {
         <span v-if="assigned[s]" class="ml-1 text-slate-400 hover:text-rose-400"
           @click.stop="clearSlot(s)">✕</span>
       </button>
+      <button class="px-2 py-1 rounded border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-400"
+        @click="clearAll">clear</button>
     </div>
     <div class="inline-grid gap-px bg-slate-800 p-px"
       :style="{ gridTemplateColumns: `repeat(13, minmax(0,1fr))` }">
