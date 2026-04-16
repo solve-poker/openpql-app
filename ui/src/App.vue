@@ -9,7 +9,7 @@ import RangeGrid from "./components/RangeGrid.vue";
 import { useRun } from "./stores/run";
 import { useHistory, type HistoryEntry } from "./stores/history";
 import { buildPql } from "./pql/build";
-import { apiValidateRange } from "./api/rest";
+import { apiValidateRange } from "./api";
 import { detectConflicts, type ConflictWarning } from "./pql/conflicts";
 
 const game = ref("holdem");

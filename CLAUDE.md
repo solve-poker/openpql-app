@@ -40,3 +40,13 @@ UI uses **bun** (not npm/pnpm). Rust edition is **2024**.
 - `pql/highlight.ts` — CodeMirror language/highlighting for PQL.
 
 Data flow: editor → REST validate → WS `/api/run` streams → `run` store → `ResultsPane`; completed runs persist to `history` store.
+
+## WASM / Cloudflare build
+
+Two runtime modes: **daemon** (local dev, full WS streaming) and **WASM** (production, fully static — no server).
+
+- The UI selects the backend automatically via `import.meta.env.DEV`, with `VITE_API_BACKEND` (`daemon` | `wasm`) as an override. See `ui/src/api/index.ts`.
+- `wasm/` is a Rust `cdylib` crate built with `wasm-pack` (`wasm/build.sh` → `ui/src/wasm-pkg/`). The module is loaded from the main thread for parse/validate and from `ui/src/workers/pql.worker.ts` for `run` (heavy Monte-Carlo work off the main thread).
+- Deployment target: **Cloudflare Pages**, static-only — no server-side code. Config lives in `wrangler.toml`, headers/redirects in `ui/public/_headers` and `ui/public/_redirects`. See `deploy/README.md`.
+- Dev flow unchanged: `just dev`. Prod build: `just build-prod` (installs `wasm-pack` if missing, builds wasm, then `vite build`). Deploy: `just deploy-preview` / `just deploy`.
+- `just check` will `cargo check` the wasm crate against `wasm32-unknown-unknown` if that target is installed, otherwise skip with a hint.

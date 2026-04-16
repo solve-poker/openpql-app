@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { RunClient, type ServerMsg } from "../api/ws";
+import { RunClient, type ServerMsg } from "../api";
 
 export interface PlayerResult {
   name: string;

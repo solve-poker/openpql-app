@@ -1,0 +1,29 @@
+[package]
+name = "openpql-wasm"
+version = "0.1.0"
+edition = "2024"
+description = "WebAssembly bindings for the Open PQL runner"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+openpql-runner = { path = "../../open-pql/openpql-runner" }
+openpql-pql-parser = { path = "../../open-pql/openpql-pql-parser" }
+openpql-range-parser = { path = "../../open-pql/openpql-range-parser" }
+openpql-prelude = { path = "../../open-pql/openpql-prelude", features = ["serde"] }
+
+wasm-bindgen = "0.2"
+js-sys = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+console_error_panic_hook = { version = "0.1", optional = true }
+
+# openpql-runner pulls in `rand` 0.10 → `getrandom` 0.4. On wasm32-unknown-unknown
+# getrandom 0.4 requires the `wasm_js` feature PLUS the rustflag
+# `--cfg getrandom_backend="wasm_js"` (set in .cargo/config.toml).
+getrandom = { version = "0.4", features = ["wasm_js"] }
+
+[features]
+default = ["debug-panics"]
+debug-panics = ["dep:console_error_panic_hook"]

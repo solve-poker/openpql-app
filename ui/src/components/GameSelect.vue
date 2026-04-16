@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { apiGames } from "../api/rest";
+import { apiGames } from "../api";
 
 const props = defineProps<{ modelValue: string; disabled?: boolean }>();
 const emit = defineEmits<{ (e: "update:modelValue", v: string): void }>();
