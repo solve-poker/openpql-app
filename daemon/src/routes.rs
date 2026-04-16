@@ -2,8 +2,10 @@ use crate::dto::*;
 use axum::{
     Json,
     extract::ws::{Message, WebSocket, WebSocketUpgrade},
+    http::{HeaderMap, StatusCode},
     response::IntoResponse,
 };
+use crate::ALLOWED_ORIGINS;
 use opql::PQLRunner;
 use openpql_pql_parser::parse_pql;
 use openpql_range_parser::parse_expr;
@@ -40,8 +42,20 @@ pub async fn validate_range(Json(req): Json<RangeReq>) -> Json<RangeResp> {
     }
 }
 
-pub async fn run_ws(ws: WebSocketUpgrade) -> impl IntoResponse {
-    ws.on_upgrade(handle_ws)
+pub async fn run_ws(headers: HeaderMap, ws: WebSocketUpgrade) -> axum::response::Response {
+    // WS origin policy: stricter than HTTP. A missing Origin is rejected too,
+    // because browser WS clients always send one. Non-browser WS tools can set
+    // --origin http://127.0.0.1:5173 if they need access. This blocks
+    // drive-by cross-site WS from random pages the user might visit.
+    let origin = headers.get(axum::http::header::ORIGIN).and_then(|v| v.to_str().ok());
+    let ok = match origin {
+        Some(o) => ALLOWED_ORIGINS.iter().any(|a| *a == o),
+        None => false,
+    };
+    if !ok {
+        return (StatusCode::FORBIDDEN, "forbidden origin").into_response();
+    }
+    ws.on_upgrade(handle_ws).into_response()
 }
 
 async fn handle_ws(mut socket: WebSocket) {
@@ -66,14 +80,14 @@ async fn handle_ws(mut socket: WebSocket) {
                 };
                 let cmd: Result<ClientMsg, _> = serde_json::from_str(&text);
                 match cmd {
-                    Ok(ClientMsg::Run { src }) => {
+                    Ok(ClientMsg::Run { src, run_id }) => {
                         if let Some(c) = cancel_tx.take() { let _ = c.send(()); }
                         let (ctx, crx) = tokio::sync::oneshot::channel();
                         cancel_tx = Some(ctx);
                         let tx2 = tx.clone();
-                        let _ = tx2.send(ServerMsg::Started);
+                        let _ = tx2.send(ServerMsg::Started { run_id });
                         tokio::spawn(async move {
-                            run_and_stream(src, tx2, crx).await;
+                            run_and_stream(src, run_id, tx2, crx).await;
                         });
                     }
                     Ok(ClientMsg::Cancel) => {
@@ -82,6 +96,7 @@ async fn handle_ws(mut socket: WebSocket) {
                     Err(e) => {
                         let _ = tx.send(ServerMsg::Error {
                             message: format!("bad client message: {e}"),
+                            run_id: None,
                         });
                     }
                 }
@@ -92,6 +107,7 @@ async fn handle_ws(mut socket: WebSocket) {
 
 async fn run_and_stream(
     src: String,
+    run_id: Option<u64>,
     tx: mpsc::UnboundedSender<ServerMsg>,
     mut cancel: tokio::sync::oneshot::Receiver<()>,
 ) {
@@ -101,22 +117,37 @@ async fn run_and_stream(
     std::thread::spawn(move || {
         let mut out = Vec::<u8>::new();
         let mut err = Vec::<u8>::new();
-        let _ = PQLRunner::run(&src, &mut out, &mut err);
+        let run_result = PQLRunner::run(&src, &mut out, &mut err);
         for line in String::from_utf8_lossy(&out).lines() {
-            let _ = tx_worker.send(ServerMsg::Stdout { line: line.to_string() });
+            let _ = tx_worker.send(ServerMsg::Stdout {
+                line: line.to_string(),
+                run_id,
+            });
         }
         for line in String::from_utf8_lossy(&err).lines() {
-            let _ = tx_worker.send(ServerMsg::Stderr { line: line.to_string() });
+            let _ = tx_worker.send(ServerMsg::Stderr {
+                line: line.to_string(),
+                run_id,
+            });
+        }
+        if let Err(e) = run_result {
+            let _ = tx_worker.send(ServerMsg::Error {
+                message: format!("runner error: {e:?}"),
+                run_id,
+            });
         }
         let _ = done_tx.send(());
     });
 
     tokio::select! {
         _ = &mut cancel => {
-            let _ = tx.send(ServerMsg::Error { message: "cancelled".into() });
+            let _ = tx.send(ServerMsg::Error {
+                message: "cancelled".into(),
+                run_id,
+            });
         }
         _ = done_rx => {
-            let _ = tx.send(ServerMsg::Done);
+            let _ = tx.send(ServerMsg::Done { run_id });
         }
     }
 }
