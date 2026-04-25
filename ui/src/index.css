@@ -131,8 +131,8 @@
   --chip-green: rgb(10 132 92);
   --chip-black: rgb(14 22 44);
   --chip-gold:  rgb(176 116 22);
-  --suit-red:   rgb(210 38 54);
-  --suit-black: rgb(14 22 44);
+  --suit-red:   rgb(248 124 148);
+  --suit-black: rgb(234 238 250);
 }
 
 body {

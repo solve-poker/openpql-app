@@ -245,7 +245,7 @@ function slotSuit(card: string | null): string {
           :tabindex="(r + suit.s) === activeCard ? 0 : -1"
           class="flex min-h-[2.25rem] items-center justify-center gap-0.5 font-mono text-xs transition focus:outline-none"
           :class="[
-            suitCls(suit.s),
+            assigned[active] === (r + suit.s) ? '' : suitCls(suit.s),
             (usedSet.has(r + suit.s) && assigned[active] !== (r + suit.s))
               ? 'cursor-not-allowed bg-bg opacity-40 line-through'
               : 'bg-surface hover:bg-elevated',
