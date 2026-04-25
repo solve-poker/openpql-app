@@ -9,10 +9,10 @@ name = "open-pql-daemon"
 path = "src/main.rs"
 
 [dependencies]
-openpql-runner = { path = "../../open-pql/openpql-runner" }
-openpql-pql-parser = { path = "../../open-pql/openpql-pql-parser" }
-openpql-range-parser = { path = "../../open-pql/openpql-range-parser" }
-openpql-prelude = { path = "../../open-pql/openpql-prelude", features = ["serde"] }
+openpql-runner = { git = "https://github.com/solve-poker/Poker-Query-Language.git", branch = "main" }
+openpql-pql-parser = { git = "https://github.com/solve-poker/Poker-Query-Language.git", branch = "main" }
+openpql-range-parser = { git = "https://github.com/solve-poker/Poker-Query-Language.git", branch = "main" }
+openpql-prelude = { git = "https://github.com/solve-poker/Poker-Query-Language.git", branch = "main", features = ["serde"] }
 
 axum = { version = "0.7", features = ["ws", "macros"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time"] }

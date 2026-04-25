@@ -21,12 +21,6 @@ jobs:
         with:
           path: openpql-app
 
-      - name: Checkout sibling open-pql workspace
-        uses: actions/checkout@v4
-        with:
-          repository: solve-poker/Poker-Query-Language
-          path: open-pql
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
