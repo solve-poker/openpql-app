@@ -6,6 +6,7 @@ import BoardPicker from "./components/BoardPicker.vue";
 import GameSelect from "./components/GameSelect.vue";
 import HistoryPane from "./components/HistoryPane.vue";
 import RangeGrid from "./components/RangeGrid.vue";
+import PqlPlayground from "./components/PqlPlayground.vue";
 import { useRun } from "./stores/run";
 import { useHistory, type HistoryEntry } from "./stores/history";
 import { buildPql } from "./pql/build";
@@ -18,6 +19,17 @@ const ranges = ref<string[]>(["AA", "KK"]);
 const validations = ref<string[]>(["", ""]);
 const rangeModes = ref<("text" | "grid")[]>(["text", "text"]);
 const tab = ref<"results" | "pql" | "history">("results");
+
+type View = "sim" | "pql";
+const view = ref<View>("sim");
+const DEFAULT_PQL = `select avg(riverEquity(p1)) as p1, avg(riverEquity(p2)) as p2
+from
+  game = 'holdem',
+  p1 = 'AA',
+  p2 = '*',
+  board = '*'
+`;
+const pqlSource = ref<string>(DEFAULT_PQL);
 
 function setMode(i: number, mode: "text" | "grid") {
   if (run.running) return;
@@ -48,7 +60,7 @@ function onLoadHistory(entry: HistoryEntry) {
 watch(
   () => run.running,
   (now, prev) => {
-    if (prev && !now && run.results.length > 0 && !run.error) {
+    if (prev && !now && run.results.length > 0 && !run.error && view.value === "sim") {
       const id = typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -130,7 +142,10 @@ function validationError(i: number): string {
   return v.startsWith("✗") ? v.slice(1).trim() : "";
 }
 
-function onRun() { run.run(pql.value); }
+function onRun() {
+  const src = view.value === "pql" ? pqlSource.value : pql.value;
+  run.run(src);
+}
 function onCancel() { run.cancel(); }
 
 interface Preset { label: string; game: string; board: string; ranges: string[]; }
@@ -209,6 +224,8 @@ onMounted(() => {
           rangeModes.value = s.ranges.map(() => "text");
         }
       }
+      if (s.view === "sim" || s.view === "pql") view.value = s.view;
+      if (typeof s.pqlSource === "string") pqlSource.value = s.pqlSource;
     }
   } catch {
     // ignore corrupted JSON
@@ -217,7 +234,7 @@ onMounted(() => {
   firstInput.value?.focus();
 });
 
-watch([game, board, ranges, rangeModes], () => {
+watch([game, board, ranges, rangeModes, view, pqlSource], () => {
   if (hydrating) return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -225,6 +242,8 @@ watch([game, board, ranges, rangeModes], () => {
       board: board.value,
       ranges: ranges.value,
       rangeModes: rangeModes.value,
+      view: view.value,
+      pqlSource: pqlSource.value,
     }));
   } catch {
     // ignore
@@ -281,8 +300,23 @@ function toggleTheme() {
           <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
           Open PQL
         </span>
-        <span class="font-display font-semibold tracking-tight text-fg">Winrate Simulator</span>
       </h1>
+      <nav class="inline-flex overflow-hidden rounded-lg border border-line bg-surface text-sm" role="tablist" aria-label="View">
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="view === 'sim'"
+          class="px-3 py-1.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          :class="view === 'sim' ? 'bg-primary text-primary-fg font-semibold' : 'text-muted hover:bg-elevated hover:text-fg'"
+          @click="view = 'sim'">Winrate Sim</button>
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="view === 'pql'"
+          class="px-3 py-1.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          :class="view === 'pql' ? 'bg-primary text-primary-fg font-semibold' : 'text-muted hover:bg-elevated hover:text-fg'"
+          @click="view = 'pql'">PQL Editor</button>
+      </nav>
       <div class="ml-auto flex flex-wrap gap-2 items-center">
         <span class="hidden sm:inline-flex items-center gap-1 text-muted">
           <kbd class="px-1.5 py-0.5 rounded-md border border-line bg-elevated text-2xs font-mono text-muted">⌘↵</kbd>
@@ -310,7 +344,7 @@ function toggleTheme() {
       </div>
     </header>
 
-    <main class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 min-h-0">
+    <main v-if="view === 'sim'" class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 min-h-0">
       <div class="flex flex-col gap-4 md:overflow-auto md:pr-2">
         <!-- Presets -->
         <section>
@@ -484,6 +518,10 @@ function toggleTheme() {
           <HistoryPane v-else @load="onLoadHistory" />
         </div>
       </div>
+    </main>
+
+    <main v-else class="flex-1 min-h-0">
+      <PqlPlayground v-model="pqlSource" />
     </main>
   </div>
 </template>
