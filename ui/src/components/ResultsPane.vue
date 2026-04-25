@@ -70,7 +70,7 @@ async function copyResults() {
 <template>
   <div class="flex h-full flex-col overflow-hidden">
     <div class="flex items-center justify-between border-b border-line bg-elevated/40 px-4 py-2">
-      <span class="text-xs font-semibold uppercase tracking-wider text-muted">Results</span>
+      <span class="label">Results</span>
       <div class="flex items-center gap-2">
         <span v-if="run.running" aria-live="polite" class="inline-flex items-center gap-1.5 rounded-chip border border-info/30 bg-info/10 px-2 py-0.5 text-2xs font-semibold text-info">
           <span class="h-1.5 w-1.5 rounded-full bg-info motion-safe:animate-pulse"></span>
@@ -107,7 +107,7 @@ async function copyResults() {
       <!-- Empty state -->
       <div v-if="!run.results.length && !run.stdout.length && !run.stderr.length && !run.running && !run.error"
         class="flex h-full flex-col items-center justify-center gap-3 text-center text-muted">
-        <div class="grid h-12 w-12 place-items-center rounded-full border border-line text-muted">▶</div>
+        <div class="grid h-12 w-12 place-items-center rounded-full border border-primary/30 text-primary">▶</div>
         <div class="text-sm font-medium text-fg">No results yet</div>
         <div class="text-xs text-muted">
           Press <kbd class="rounded-md border border-line bg-elevated px-1.5 py-0.5 font-mono text-2xs text-fg">⌘↵</kbd> to run
@@ -147,7 +147,7 @@ async function copyResults() {
               <span class="inline-flex items-center gap-1.5">
                 <span
                   v-if="leaderIndices.includes(r.index)"
-                  class="rounded-chip bg-success/10 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-success"
+                  class="rounded-chip border border-primary/30 bg-primary-soft px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-primary"
                 >▲ Lead</span>
                 <span>{{ r.name }}</span>
               </span>
@@ -162,7 +162,10 @@ async function copyResults() {
               <div class="h-2 overflow-hidden rounded-chip bg-elevated">
                 <div class="h-full transition-[width] duration-300 motion-reduce:transition-none"
                   :class="leaderIndices.includes(r.index) ? 'bg-primary' : 'bg-subtle'"
-                  :style="{ width: Math.max(0, Math.min(100, r.equity * 100)) + '%' }"></div>
+                  :style="{
+                    width: Math.max(0, Math.min(100, r.equity * 100)) + '%',
+                    boxShadow: leaderIndices.includes(r.index) ? '0 0 12px var(--primary-soft)' : undefined,
+                  }"></div>
               </div>
             </td>
           </tr>

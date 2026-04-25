@@ -183,29 +183,70 @@ function presetTop10() {
   setFrom(out);
 }
 
-function cellClasses(label: string, isPair: boolean): string {
+// Keyboard navigation — arrow keys move the active cell; space/enter toggles.
+const activeRow = ref(0);
+const activeCol = ref(0);
+const gridFocused = ref(false);
+
+function onGridKeydown(e: KeyboardEvent) {
+  if (props.disabled) return;
+  const key = e.key;
+  if (key === "ArrowUp") {
+    e.preventDefault();
+    activeRow.value = (activeRow.value - 1 + RANKS.length) % RANKS.length;
+  } else if (key === "ArrowDown") {
+    e.preventDefault();
+    activeRow.value = (activeRow.value + 1) % RANKS.length;
+  } else if (key === "ArrowLeft") {
+    e.preventDefault();
+    activeCol.value = (activeCol.value - 1 + RANKS.length) % RANKS.length;
+  } else if (key === "ArrowRight") {
+    e.preventDefault();
+    activeCol.value = (activeCol.value + 1) % RANKS.length;
+  } else if (key === " " || key === "Enter") {
+    e.preventDefault();
+    const label = cellLabel(RANKS[activeRow.value], RANKS[activeCol.value]);
+    const next = new Set(selected.value);
+    if (next.has(label)) next.delete(label);
+    else next.add(label);
+    selected.value = next;
+    hasUnrepresented.value = false;
+    emitCurrent();
+  }
+}
+
+function cellClasses(label: string, isPair: boolean, isActive: boolean): string {
   const base = "aspect-square flex items-center justify-center font-mono text-2xs cursor-pointer select-none border transition";
-  const on = "bg-primary text-primary-fg border-primary";
+  const on = "bg-primary text-primary-fg border-primary font-semibold";
   const off = "bg-elevated text-muted hover:bg-primary-soft hover:text-primary border-transparent";
-  const ring = isPair ? " ring-1 ring-inset ring-line" : "";
+  const pairRing = isPair ? " ring-1 ring-inset ring-line" : "";
+  const activeRing = isActive && gridFocused.value ? " ring-2 ring-inset ring-primary" : "";
   const dis = props.disabled ? " opacity-50 pointer-events-none" : "";
-  return base + " " + (selected.value.has(label) ? on : off) + ring + dis;
+  return base + " " + (selected.value.has(label) ? on : off) + pairRing + activeRing + dis;
 }
 </script>
 
 <template>
-  <div class="flex max-w-[520px] flex-col gap-2">
+  <div class="flex flex-col gap-2">
     <div
-      class="grid gap-px rounded-md border border-line bg-line p-px"
-      :style="{ gridTemplateColumns: 'repeat(13, minmax(1.2rem, 1fr))' }"
+      class="grid gap-px rounded-md border border-line bg-line p-px focus:outline-none"
+      :style="{ gridTemplateColumns: 'repeat(13, minmax(2.125rem, 1fr))' }"
+      tabindex="0"
+      role="grid"
+      aria-label="Hand range grid"
+      @focus="gridFocused = true"
+      @blur="gridFocused = false"
+      @keydown="onGridKeydown"
       @mouseup="endPaint"
       @mouseleave="endPaint">
       <template v-for="(rowRank, ri) in RANKS" :key="rowRank">
         <div
           v-for="(colRank, ci) in RANKS"
           :key="rowRank + '-' + colRank"
-          :class="cellClasses(cellLabel(rowRank, colRank), ri === ci)"
-          :style="{ minWidth: '1.2rem' }"
+          :class="cellClasses(cellLabel(rowRank, colRank), ri === ci, ri === activeRow && ci === activeCol)"
+          :style="{ minWidth: '2.125rem' }"
+          role="gridcell"
+          :aria-selected="selected.has(cellLabel(rowRank, colRank))"
           @mousedown="onCellDown(cellLabel(rowRank, colRank), $event)"
           @mouseenter="onCellEnter(cellLabel(rowRank, colRank))">
           {{ cellDisplay(rowRank, colRank) }}
@@ -216,33 +257,37 @@ function cellClasses(label: string, isPair: boolean): string {
     <div class="flex flex-wrap items-center gap-1.5">
       <button
         type="button"
-        class="rounded-md border border-line bg-surface px-2 py-0.5 text-2xs font-medium text-fg transition hover:bg-elevated disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+        class="rounded-chip border border-line bg-surface px-3 py-1 text-2xs font-medium text-muted hover:border-primary/50 hover:bg-primary-soft hover:text-primary transition disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         :disabled="disabled" @click="presetAll">All</button>
       <button
         type="button"
-        class="rounded-md border border-line bg-surface px-2 py-0.5 text-2xs font-medium text-fg transition hover:bg-elevated disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+        class="rounded-chip border border-line bg-surface px-3 py-1 text-2xs font-medium text-muted hover:border-primary/50 hover:bg-primary-soft hover:text-primary transition disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         :disabled="disabled" @click="presetNone">None</button>
       <button
         type="button"
-        class="rounded-md border border-line bg-surface px-2 py-0.5 text-2xs font-medium text-fg transition hover:bg-elevated disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+        class="rounded-chip border border-line bg-surface px-3 py-1 text-2xs font-medium text-muted hover:border-primary/50 hover:bg-primary-soft hover:text-primary transition disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         :disabled="disabled" @click="presetPairs">Pairs (22+)</button>
       <button
         type="button"
-        class="rounded-md border border-line bg-surface px-2 py-0.5 text-2xs font-medium text-fg transition hover:bg-elevated disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+        class="rounded-chip border border-line bg-surface px-3 py-1 text-2xs font-medium text-muted hover:border-primary/50 hover:bg-primary-soft hover:text-primary transition disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         :disabled="disabled" @click="presetSuited">Suited (all)</button>
       <button
         type="button"
-        class="rounded-md border border-line bg-surface px-2 py-0.5 text-2xs font-medium text-fg transition hover:bg-elevated disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+        class="rounded-chip border border-line bg-surface px-3 py-1 text-2xs font-medium text-muted hover:border-primary/50 hover:bg-primary-soft hover:text-primary transition disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         :disabled="disabled" @click="presetBroadway">Broadway</button>
       <button
         type="button"
-        class="rounded-md border border-line bg-surface px-2 py-0.5 text-2xs font-medium text-fg transition hover:bg-elevated disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+        class="rounded-chip border border-line bg-surface px-3 py-1 text-2xs font-medium text-muted hover:border-primary/50 hover:bg-primary-soft hover:text-primary transition disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         :disabled="disabled" @click="presetTop10">Top 10%</button>
     </div>
 
-    <div class="font-mono text-2xs text-muted">{{ comboCount }} combos selected</div>
+    <div class="flex items-center gap-2">
+      <span class="label">selected</span>
+      <span class="font-mono tabular-nums text-fg">{{ comboCount }}</span>
+      <span class="text-2xs text-muted">/ 1326 combos</span>
+    </div>
     <div v-if="hasUnrepresented" class="text-2xs text-warning">
-      Some parts of this range can't be shown in the grid.
+      Some range parts can't be shown in the grid.
     </div>
   </div>
 </template>

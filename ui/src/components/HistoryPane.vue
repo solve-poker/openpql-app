@@ -85,7 +85,7 @@ function onClearAll() {
 <template>
   <div class="flex h-full flex-col overflow-hidden">
     <div class="flex items-center justify-between border-b border-line bg-elevated/40 px-4 py-2">
-      <span class="text-xs font-semibold uppercase tracking-wider text-muted">History</span>
+      <span class="label">History</span>
       <button
         v-if="entries.length"
         type="button"
@@ -124,7 +124,7 @@ function onClearAll() {
               <div class="mt-1.5 truncate font-mono text-sm font-medium text-fg">
                 <template v-if="topResult(entry)">
                   {{ topResult(entry)!.name }}
-                  <span class="text-success tabular-nums">▲ {{ fmtPct(topResult(entry)!.equity) }}</span>
+                  <span class="text-primary tabular-nums">▲ {{ fmtPct(topResult(entry)!.equity) }}</span>
                 </template>
                 <template v-else>
                   <span class="text-subtle">—</span>

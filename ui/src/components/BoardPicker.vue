@@ -41,6 +41,9 @@ const buttonRefs = ref<Record<string, HTMLButtonElement | null>>({});
 
 const usedSet = computed(() => new Set(Object.values(assigned.value).filter(Boolean) as string[]));
 const anyFilled = computed(() => SLOTS.some((s) => assigned.value[s]));
+const assignedString = computed(() =>
+  SLOTS.map((s) => assigned.value[s]).filter(Boolean).join(""),
+);
 
 function nextEmptySlot(from: Slot): Slot {
   const idx = SLOTS.indexOf(from);
@@ -65,8 +68,7 @@ function clearAll() {
 }
 
 function emitValue() {
-  const board = SLOTS.map((s) => assigned.value[s]).filter(Boolean).join("");
-  emit("update:modelValue", board);
+  emit("update:modelValue", assignedString.value);
 }
 
 function focusActive() {
@@ -123,96 +125,93 @@ function slotSuit(card: string | null): string {
 <template>
   <div class="flex flex-col gap-3">
     <div class="flex flex-wrap items-center gap-3">
-      <div class="flex gap-1.5 rounded-lg border border-line bg-bg p-1.5">
+      <div class="board-panel flex items-center gap-1.5 p-3">
         <div v-for="s in FLOP_SLOTS" :key="s" class="relative">
           <button
             type="button"
-            class="relative flex h-16 w-12 flex-col justify-between rounded-md border p-1 font-mono transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+            class="relative h-[60px] w-[44px] rounded-md border font-mono transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             :class="[
               assigned[s]
-                ? 'border-line bg-elevated text-fg shadow-card'
-                : 'border-dashed border-line bg-transparent text-subtle',
-              active === s ? 'ring-2 ring-primary' : '',
+                ? 'flex flex-col justify-between p-1 border-solid border-line bg-elevated text-fg shadow-card dark:shadow-[0_1px_0_rgba(255,255,255,0.04),0_2px_6px_rgba(0,0,0,0.4)]'
+                : 'flex items-center justify-center p-1 border-dashed border-line bg-transparent text-subtle',
+              active === s ? 'outline outline-2 outline-offset-2 outline-primary' : '',
             ]"
             @click="active = s">
             <template v-if="assigned[s]">
-              <span class="text-xs leading-none text-left">{{ slotRank(assigned[s]) }}</span>
+              <span class="text-sm leading-none text-left">{{ slotRank(assigned[s]) }}</span>
               <span class="text-lg leading-none self-end" :class="suitCls(slotSuit(assigned[s]))">
                 {{ suitGlyph(slotSuit(assigned[s])) }}
               </span>
             </template>
             <template v-else>
-              <span class="text-2xs leading-none text-left font-semibold uppercase tracking-widest text-muted">{{ LABELS[s] }}</span>
-              <span class="text-2xs leading-none self-center text-subtle">empty</span>
+              <span class="text-2xs leading-none font-semibold uppercase tracking-widest text-muted">{{ LABELS[s] }}</span>
             </template>
           </button>
           <button
             v-if="assigned[s]"
             type="button"
             aria-label="Clear slot"
-            class="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full border border-line bg-elevated text-2xs leading-none text-muted transition hover:border-danger hover:text-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
+            class="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full border border-line bg-elevated text-2xs leading-none text-muted transition hover:border-danger hover:text-chip-red focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
             @click.stop="clearSlot(s)">✕</button>
         </div>
-      </div>
-      <span class="h-10 w-px bg-line"></span>
-      <div class="relative">
-        <button
-          type="button"
-          class="relative flex h-16 w-12 flex-col justify-between rounded-md border p-1 font-mono transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-          :class="[
-            assigned.turn
-              ? 'border-line bg-elevated text-fg shadow-card'
-              : 'border-dashed border-line bg-transparent text-subtle',
-            active === 'turn' ? 'ring-2 ring-primary' : '',
-          ]"
-          @click="active = 'turn'">
-          <template v-if="assigned.turn">
-            <span class="text-xs leading-none text-left">{{ slotRank(assigned.turn) }}</span>
-            <span class="text-lg leading-none self-end" :class="suitCls(slotSuit(assigned.turn))">
-              {{ suitGlyph(slotSuit(assigned.turn)) }}
-            </span>
-          </template>
-          <template v-else>
-            <span class="text-2xs leading-none text-left font-semibold uppercase tracking-widest text-muted">{{ LABELS.turn }}</span>
-            <span class="text-2xs leading-none self-center text-subtle">empty</span>
-          </template>
-        </button>
-        <button
-          v-if="assigned.turn"
-          type="button"
-          aria-label="Clear slot"
-          class="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full border border-line bg-elevated text-2xs leading-none text-muted transition hover:border-danger hover:text-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
-          @click.stop="clearSlot('turn')">✕</button>
-      </div>
-      <span class="h-10 w-px bg-line"></span>
-      <div class="relative">
-        <button
-          type="button"
-          class="relative flex h-16 w-12 flex-col justify-between rounded-md border p-1 font-mono transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-          :class="[
-            assigned.river
-              ? 'border-line bg-elevated text-fg shadow-card'
-              : 'border-dashed border-line bg-transparent text-subtle',
-            active === 'river' ? 'ring-2 ring-primary' : '',
-          ]"
-          @click="active = 'river'">
-          <template v-if="assigned.river">
-            <span class="text-xs leading-none text-left">{{ slotRank(assigned.river) }}</span>
-            <span class="text-lg leading-none self-end" :class="suitCls(slotSuit(assigned.river))">
-              {{ suitGlyph(slotSuit(assigned.river)) }}
-            </span>
-          </template>
-          <template v-else>
-            <span class="text-2xs leading-none text-left font-semibold uppercase tracking-widest text-muted">{{ LABELS.river }}</span>
-            <span class="text-2xs leading-none self-center text-subtle">empty</span>
-          </template>
-        </button>
-        <button
-          v-if="assigned.river"
-          type="button"
-          aria-label="Clear slot"
-          class="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full border border-line bg-elevated text-2xs leading-none text-muted transition hover:border-danger hover:text-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
-          @click.stop="clearSlot('river')">✕</button>
+        <span class="h-10 w-px self-center bg-line"></span>
+        <div class="relative">
+          <button
+            type="button"
+            class="relative h-[60px] w-[44px] rounded-md border font-mono transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+            :class="[
+              assigned.turn
+                ? 'flex flex-col justify-between p-1 border-solid border-line bg-elevated text-fg shadow-card dark:shadow-[0_1px_0_rgba(255,255,255,0.04),0_2px_6px_rgba(0,0,0,0.4)]'
+                : 'flex items-center justify-center p-1 border-dashed border-line bg-transparent text-subtle',
+              active === 'turn' ? 'outline outline-2 outline-offset-2 outline-primary' : '',
+            ]"
+            @click="active = 'turn'">
+            <template v-if="assigned.turn">
+              <span class="text-sm leading-none text-left">{{ slotRank(assigned.turn) }}</span>
+              <span class="text-lg leading-none self-end" :class="suitCls(slotSuit(assigned.turn))">
+                {{ suitGlyph(slotSuit(assigned.turn)) }}
+              </span>
+            </template>
+            <template v-else>
+              <span class="text-2xs leading-none font-semibold uppercase tracking-widest text-muted">{{ LABELS.turn }}</span>
+            </template>
+          </button>
+          <button
+            v-if="assigned.turn"
+            type="button"
+            aria-label="Clear slot"
+            class="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full border border-line bg-elevated text-2xs leading-none text-muted transition hover:border-danger hover:text-chip-red focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
+            @click.stop="clearSlot('turn')">✕</button>
+        </div>
+        <span class="h-10 w-px self-center bg-line"></span>
+        <div class="relative">
+          <button
+            type="button"
+            class="relative h-[60px] w-[44px] rounded-md border font-mono transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+            :class="[
+              assigned.river
+                ? 'flex flex-col justify-between p-1 border-solid border-line bg-elevated text-fg shadow-card dark:shadow-[0_1px_0_rgba(255,255,255,0.04),0_2px_6px_rgba(0,0,0,0.4)]'
+                : 'flex items-center justify-center p-1 border-dashed border-line bg-transparent text-subtle',
+              active === 'river' ? 'outline outline-2 outline-offset-2 outline-primary' : '',
+            ]"
+            @click="active = 'river'">
+            <template v-if="assigned.river">
+              <span class="text-sm leading-none text-left">{{ slotRank(assigned.river) }}</span>
+              <span class="text-lg leading-none self-end" :class="suitCls(slotSuit(assigned.river))">
+                {{ suitGlyph(slotSuit(assigned.river)) }}
+              </span>
+            </template>
+            <template v-else>
+              <span class="text-2xs leading-none font-semibold uppercase tracking-widest text-muted">{{ LABELS.river }}</span>
+            </template>
+          </button>
+          <button
+            v-if="assigned.river"
+            type="button"
+            aria-label="Clear slot"
+            class="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full border border-line bg-elevated text-2xs leading-none text-muted transition hover:border-danger hover:text-chip-red focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
+            @click.stop="clearSlot('river')">✕</button>
+        </div>
       </div>
       <button
         v-if="anyFilled"
@@ -226,16 +225,16 @@ function slotSuit(card: string | null): string {
       :style="{ gridTemplateColumns: `repeat(14, minmax(0,1fr))` }"
       role="grid"
       @keydown="onKeydown">
-      <div class="min-h-[2.25rem] bg-surface"></div>
+      <div class="min-h-[1.5rem] bg-surface"></div>
       <div
         v-for="r in RANKS" :key="'hdr-' + r"
-        class="flex min-h-[2.25rem] items-center justify-center bg-surface font-mono text-2xs text-muted">
+        class="flex min-h-[1.5rem] items-center justify-center bg-surface font-mono text-2xs text-muted">
         {{ r }}
       </div>
 
       <template v-for="suit in SUITS" :key="suit.s">
         <div
-          class="flex min-h-[2.25rem] items-center justify-center bg-surface font-mono text-2xs"
+          class="flex min-h-[1.875rem] items-center justify-center bg-surface font-mono text-2xs"
           :class="suitCls(suit.s)">
           {{ suit.label }}
         </div>
@@ -243,14 +242,14 @@ function slotSuit(card: string | null): string {
           :ref="(el) => setBtnRef(r + suit.s, el)"
           :disabled="usedSet.has(r + suit.s) && assigned[active] !== (r + suit.s)"
           :tabindex="(r + suit.s) === activeCard ? 0 : -1"
-          class="flex min-h-[2.25rem] items-center justify-center gap-0.5 font-mono text-xs transition focus:outline-none"
+          class="flex min-h-[1.875rem] items-center justify-center gap-0.5 font-mono text-xs transition focus:outline-none"
           :class="[
             assigned[active] === (r + suit.s) ? '' : suitCls(suit.s),
             (usedSet.has(r + suit.s) && assigned[active] !== (r + suit.s))
-              ? 'cursor-not-allowed bg-bg opacity-40 line-through'
+              ? 'cursor-not-allowed bg-bg opacity-[0.35] line-through'
               : 'bg-surface hover:bg-elevated',
             assigned[active] === (r + suit.s)
-              ? 'bg-primary text-primary-fg hover:bg-primary'
+              ? 'bg-primary text-primary-fg font-bold hover:bg-primary'
               : '',
             (r + suit.s) === activeCard && assigned[active] !== (r + suit.s)
               ? 'ring-2 ring-inset ring-primary'
@@ -262,6 +261,13 @@ function slotSuit(card: string | null): string {
           <span class="text-2xs">{{ suit.label }}</span>
         </button>
       </template>
+    </div>
+
+    <div class="mt-2 flex items-center gap-2 text-2xs">
+      <span class="label">board</span>
+      <span class="font-mono text-fg">{{ assignedString || '—' }}</span>
+      <span class="ml-auto label">active</span>
+      <span class="font-mono text-primary">{{ LABELS[active] }}</span>
     </div>
   </div>
 </template>

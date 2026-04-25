@@ -296,7 +296,7 @@ function toggleTheme() {
   <div class="h-screen flex flex-col bg-bg text-fg">
     <header class="px-5 py-3 border-b border-line bg-surface flex flex-wrap items-center gap-4">
       <h1 class="flex items-center gap-2 text-base">
-        <span class="inline-flex items-center gap-2 rounded-chip border border-primary/30 bg-primary-soft px-2.5 py-0.5 text-2xs font-semibold uppercase tracking-widest text-primary">
+        <span class="gold-pill">
           <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
           Open PQL
         </span>
@@ -332,7 +332,8 @@ function toggleTheme() {
         </button>
         <button
           type="button"
-          class="rounded-lg bg-primary px-4 py-1.5 text-sm font-semibold text-primary-fg shadow-sm transition hover:bg-primary-hover disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg dark:hover:shadow-glow"
+          class="rounded-lg px-4 py-1.5 text-sm font-semibold text-primary-fg shadow-sm transition disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg dark:hover:shadow-glow"
+          style="background: linear-gradient(180deg, var(--primary), color-mix(in srgb, var(--primary) 80%, black));"
           :disabled="run.running" @click="onRun">Run</button>
         <button
           type="button"
@@ -349,7 +350,7 @@ function toggleTheme() {
         <!-- Presets -->
         <section>
           <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs font-semibold uppercase tracking-wider text-muted mr-1">Try</span>
+            <span class="label mr-1">Try</span>
             <button v-for="p in PRESETS" :key="p.label"
               type="button"
               class="rounded-chip border border-line bg-surface px-3 py-1 text-xs font-medium text-fg transition hover:border-primary/50 hover:bg-primary-soft hover:text-primary disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
@@ -365,21 +366,21 @@ function toggleTheme() {
           </div>
         </section>
 
-        <section class="rounded-card border border-line bg-surface p-5 shadow-card">
-          <label class="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Game</label>
+        <section class="panel p-5">
+          <label class="label block mb-2">Game</label>
           <GameSelect v-model="game" :disabled="run.running" />
         </section>
 
-        <section class="rounded-card border border-line bg-surface p-5 shadow-card">
-          <label class="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Board</label>
+        <section class="panel p-5">
+          <label class="label block mb-2">Board</label>
           <div class="overflow-x-auto">
             <BoardPicker v-model="board" />
           </div>
         </section>
 
-        <section class="rounded-card border border-line bg-surface p-5 shadow-card">
+        <section class="panel p-5">
           <div class="flex items-center justify-between mb-3">
-            <label class="block text-xs font-semibold uppercase tracking-wider text-muted">
+            <label class="label block">
               Players <span class="font-mono text-fg">({{ ranges.length }})</span>
             </label>
             <div class="flex gap-1">
