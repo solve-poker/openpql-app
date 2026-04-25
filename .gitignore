@@ -8,3 +8,4 @@ dist/
 /wasm/target/
 /ui/src/wasm-pkg/
 /.wrangler/
+Cargo.lock
