@@ -369,21 +369,15 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "openpql-core"
-version = "0.1.0"
+version = "0.1.4"
 dependencies = [
- "bitflags",
  "derive_more",
- "openpql-macro",
- "openpql-pql-parser",
  "openpql-prelude",
- "openpql-range-parser",
- "rand",
- "smallvec",
 ]
 
 [[package]]
 name = "openpql-macro"
-version = "0.1.0"
+version = "0.1.4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -392,7 +386,7 @@ dependencies = [
 
 [[package]]
 name = "openpql-pql-parser"
-version = "0.1.0"
+version = "0.1.4"
 dependencies = [
  "derive_more",
  "lalrpop",
@@ -402,7 +396,7 @@ dependencies = [
 
 [[package]]
 name = "openpql-prelude"
-version = "0.1.2"
+version = "0.1.4"
 dependencies = [
  "derive_more",
  "rand",
@@ -411,7 +405,7 @@ dependencies = [
 
 [[package]]
 name = "openpql-range-parser"
-version = "0.1.0"
+version = "0.1.4"
 dependencies = [
  "derive_more",
  "itertools",
@@ -423,7 +417,7 @@ dependencies = [
 
 [[package]]
 name = "openpql-runner"
-version = "0.1.0"
+version = "0.1.4"
 dependencies = [
  "bitflags",
  "derive_more",
