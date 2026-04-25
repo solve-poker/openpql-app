@@ -19,6 +19,15 @@ function cellLabel(rowRank: string, colRank: string): string {
   return hi + "x" + lo + "y";
 }
 
+function cellDisplay(rowRank: string, colRank: string): string {
+  if (rowRank === colRank) return rowRank + rowRank;
+  const rv = RANK_VAL[rowRank];
+  const cv = RANK_VAL[colRank];
+  const hi = rv > cv ? rowRank : colRank;
+  const lo = rv > cv ? colRank : rowRank;
+  return hi + lo + (rv > cv ? "s" : "o");
+}
+
 const ALL_LABELS: string[] = [];
 for (const r of RANKS) for (const c of RANKS) ALL_LABELS.push(cellLabel(r, c));
 const LABEL_SET = new Set(ALL_LABELS);
@@ -199,7 +208,7 @@ function cellClasses(label: string, isPair: boolean): string {
           :style="{ minWidth: '1.2rem' }"
           @mousedown="onCellDown(cellLabel(rowRank, colRank), $event)"
           @mouseenter="onCellEnter(cellLabel(rowRank, colRank))">
-          {{ cellLabel(rowRank, colRank) }}
+          {{ cellDisplay(rowRank, colRank) }}
         </div>
       </template>
     </div>
