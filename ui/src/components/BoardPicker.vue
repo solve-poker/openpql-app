@@ -3,10 +3,10 @@ import { computed, nextTick, ref, watch } from "vue";
 
 const RANKS = ["A","K","Q","J","T","9","8","7","6","5","4","3","2"];
 const SUITS = [
-  { s: "s", label: "\u2660", cls: "text-slate-200" },
-  { s: "h", label: "\u2665", cls: "text-rose-400" },
-  { s: "d", label: "\u2666", cls: "text-rose-400" },
-  { s: "c", label: "\u2663", cls: "text-slate-200" },
+  { s: "s", label: "♠" },
+  { s: "h", label: "♥" },
+  { s: "d", label: "♦" },
+  { s: "c", label: "♣" },
 ];
 
 function suitGlyph(s: string): string {
@@ -14,7 +14,7 @@ function suitGlyph(s: string): string {
   return m ? m.label : s;
 }
 function suitCls(s: string): string {
-  return s === "h" || s === "d" ? "text-rose-400" : "text-slate-200";
+  return s === "h" || s === "d" ? "text-suit-red" : "text-suit-black";
 }
 
 const SLOTS = ["flop1", "flop2", "flop3", "turn", "river"] as const;
@@ -24,7 +24,6 @@ const LABELS: Record<Slot, string> = {
 };
 const FLOP_SLOTS: Slot[] = ["flop1", "flop2", "flop3"];
 
-// 13 cols (ranks) * 4 rows (suits) grid, row-major: index = suitIdx*13 + rankIdx.
 const GRID_CARDS: string[] = [];
 for (const suit of SUITS) {
   for (const r of RANKS) GRID_CARDS.push(r + suit.s);
@@ -48,7 +47,6 @@ function nextEmptySlot(from: Slot): Slot {
   for (let i = idx + 1; i < SLOTS.length; i++) {
     if (!assigned.value[SLOTS[i]]) return SLOTS[i];
   }
-  // If none after current, try any empty.
   for (const s of SLOTS) if (!assigned.value[s]) return s;
   return from;
 }
@@ -124,17 +122,17 @@ function slotSuit(card: string | null): string {
 
 <template>
   <div class="flex flex-col gap-3">
-    <div class="flex gap-2 flex-wrap items-center">
-      <div class="flex gap-1 p-1 rounded bg-slate-900/50 border border-slate-800">
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="flex gap-1.5 rounded-lg border border-line bg-bg p-1.5">
         <div v-for="s in FLOP_SLOTS" :key="s" class="relative">
           <button
             type="button"
-            class="relative w-12 h-16 rounded border flex flex-col justify-between p-1 font-mono transition-colors"
+            class="relative flex h-16 w-12 flex-col justify-between rounded-md border p-1 font-mono transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             :class="[
               assigned[s]
-                ? 'bg-slate-100 text-slate-900 border-slate-300'
-                : 'bg-transparent border-dashed border-slate-700 text-slate-600',
-              active === s ? 'ring-2 ring-emerald-500/60' : '',
+                ? 'border-line bg-elevated text-fg shadow-card'
+                : 'border-dashed border-line bg-transparent text-subtle',
+              active === s ? 'ring-2 ring-primary' : '',
             ]"
             @click="active = s">
             <template v-if="assigned[s]">
@@ -144,28 +142,28 @@ function slotSuit(card: string | null): string {
               </span>
             </template>
             <template v-else>
-              <span class="text-[10px] leading-none text-left opacity-70">{{ LABELS[s] }}</span>
-              <span class="text-[10px] leading-none self-center opacity-50">empty</span>
+              <span class="text-2xs leading-none text-left font-semibold uppercase tracking-widest text-muted">{{ LABELS[s] }}</span>
+              <span class="text-2xs leading-none self-center text-subtle">empty</span>
             </template>
           </button>
           <button
             v-if="assigned[s]"
             type="button"
             aria-label="Clear slot"
-            class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-slate-800 border border-slate-700 text-[10px] leading-none text-slate-300 hover:text-rose-400 hover:border-rose-400 flex items-center justify-center"
+            class="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full border border-line bg-elevated text-2xs leading-none text-muted transition hover:border-danger hover:text-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
             @click.stop="clearSlot(s)">✕</button>
         </div>
       </div>
-      <span class="w-px h-10 bg-slate-800"></span>
+      <span class="h-10 w-px bg-line"></span>
       <div class="relative">
         <button
           type="button"
-          class="relative w-12 h-16 rounded border flex flex-col justify-between p-1 font-mono transition-colors"
+          class="relative flex h-16 w-12 flex-col justify-between rounded-md border p-1 font-mono transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
           :class="[
             assigned.turn
-              ? 'bg-slate-100 text-slate-900 border-slate-300'
-              : 'bg-transparent border-dashed border-slate-700 text-slate-600',
-            active === 'turn' ? 'ring-2 ring-emerald-500/60' : '',
+              ? 'border-line bg-elevated text-fg shadow-card'
+              : 'border-dashed border-line bg-transparent text-subtle',
+            active === 'turn' ? 'ring-2 ring-primary' : '',
           ]"
           @click="active = 'turn'">
           <template v-if="assigned.turn">
@@ -175,27 +173,27 @@ function slotSuit(card: string | null): string {
             </span>
           </template>
           <template v-else>
-            <span class="text-[10px] leading-none text-left opacity-70">{{ LABELS.turn }}</span>
-            <span class="text-[10px] leading-none self-center opacity-50">empty</span>
+            <span class="text-2xs leading-none text-left font-semibold uppercase tracking-widest text-muted">{{ LABELS.turn }}</span>
+            <span class="text-2xs leading-none self-center text-subtle">empty</span>
           </template>
         </button>
         <button
           v-if="assigned.turn"
           type="button"
           aria-label="Clear slot"
-          class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-slate-800 border border-slate-700 text-[10px] leading-none text-slate-300 hover:text-rose-400 hover:border-rose-400 flex items-center justify-center"
+          class="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full border border-line bg-elevated text-2xs leading-none text-muted transition hover:border-danger hover:text-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
           @click.stop="clearSlot('turn')">✕</button>
       </div>
-      <span class="w-px h-10 bg-slate-800"></span>
+      <span class="h-10 w-px bg-line"></span>
       <div class="relative">
         <button
           type="button"
-          class="relative w-12 h-16 rounded border flex flex-col justify-between p-1 font-mono transition-colors"
+          class="relative flex h-16 w-12 flex-col justify-between rounded-md border p-1 font-mono transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
           :class="[
             assigned.river
-              ? 'bg-slate-100 text-slate-900 border-slate-300'
-              : 'bg-transparent border-dashed border-slate-700 text-slate-600',
-            active === 'river' ? 'ring-2 ring-emerald-500/60' : '',
+              ? 'border-line bg-elevated text-fg shadow-card'
+              : 'border-dashed border-line bg-transparent text-subtle',
+            active === 'river' ? 'ring-2 ring-primary' : '',
           ]"
           @click="active = 'river'">
           <template v-if="assigned.river">
@@ -205,64 +203,63 @@ function slotSuit(card: string | null): string {
             </span>
           </template>
           <template v-else>
-            <span class="text-[10px] leading-none text-left opacity-70">{{ LABELS.river }}</span>
-            <span class="text-[10px] leading-none self-center opacity-50">empty</span>
+            <span class="text-2xs leading-none text-left font-semibold uppercase tracking-widest text-muted">{{ LABELS.river }}</span>
+            <span class="text-2xs leading-none self-center text-subtle">empty</span>
           </template>
         </button>
         <button
           v-if="assigned.river"
           type="button"
           aria-label="Clear slot"
-          class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-slate-800 border border-slate-700 text-[10px] leading-none text-slate-300 hover:text-rose-400 hover:border-rose-400 flex items-center justify-center"
+          class="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full border border-line bg-elevated text-2xs leading-none text-muted transition hover:border-danger hover:text-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
           @click.stop="clearSlot('river')">✕</button>
       </div>
       <button
         v-if="anyFilled"
         type="button"
-        class="ml-auto text-[11px] text-slate-500 hover:text-rose-400"
+        class="ml-auto text-xs text-muted transition hover:text-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         @click="clearAll">Clear board</button>
     </div>
 
     <div
-      class="inline-grid gap-px bg-slate-800 p-px"
+      class="inline-grid gap-px rounded-md border border-line bg-line p-px"
       :style="{ gridTemplateColumns: `repeat(14, minmax(0,1fr))` }"
       role="grid"
       @keydown="onKeydown">
-      <!-- Header row: blank corner + suit glyphs -->
-      <div class="min-h-[2.25rem] bg-slate-950"></div>
+      <div class="min-h-[2.25rem] bg-surface"></div>
       <div
         v-for="r in RANKS" :key="'hdr-' + r"
-        class="min-h-[2.25rem] flex items-center justify-center text-[10px] text-slate-500 bg-slate-950 font-mono">
+        class="flex min-h-[2.25rem] items-center justify-center bg-surface font-mono text-2xs text-muted">
         {{ r }}
       </div>
 
       <template v-for="suit in SUITS" :key="suit.s">
         <div
-          class="min-h-[2.25rem] flex items-center justify-center text-[10px] bg-slate-950 font-mono"
-          :class="suit.cls">
+          class="flex min-h-[2.25rem] items-center justify-center bg-surface font-mono text-2xs"
+          :class="suitCls(suit.s)">
           {{ suit.label }}
         </div>
         <button v-for="r in RANKS" :key="r + suit.s"
           :ref="(el) => setBtnRef(r + suit.s, el)"
           :disabled="usedSet.has(r + suit.s) && assigned[active] !== (r + suit.s)"
           :tabindex="(r + suit.s) === activeCard ? 0 : -1"
-          class="min-h-[2.25rem] text-xs font-mono flex items-center justify-center gap-0.5 focus:outline-none transition-colors"
+          class="flex min-h-[2.25rem] items-center justify-center gap-0.5 font-mono text-xs transition focus:outline-none"
           :class="[
-            suit.cls,
+            suitCls(suit.s),
             (usedSet.has(r + suit.s) && assigned[active] !== (r + suit.s))
-              ? 'opacity-40 line-through bg-slate-900 cursor-not-allowed'
-              : 'hover:bg-slate-700',
+              ? 'cursor-not-allowed bg-bg opacity-40 line-through'
+              : 'bg-surface hover:bg-elevated',
             assigned[active] === (r + suit.s)
-              ? 'bg-sky-700'
-              : ((usedSet.has(r + suit.s) && assigned[active] !== (r + suit.s)) ? '' : 'bg-slate-900'),
+              ? 'bg-primary text-primary-fg hover:bg-primary'
+              : '',
             (r + suit.s) === activeCard && assigned[active] !== (r + suit.s)
-              ? 'ring-2 ring-emerald-500 ring-inset'
+              ? 'ring-2 ring-inset ring-primary'
               : '',
           ]"
           @click="activeCard = (r + suit.s); pick(r + suit.s)"
           @focus="activeCard = (r + suit.s)">
           <span>{{ r }}</span>
-          <span class="text-[10px]">{{ suit.label }}</span>
+          <span class="text-2xs">{{ suit.label }}</span>
         </button>
       </template>
     </div>

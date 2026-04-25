@@ -9,10 +9,6 @@ const RANK_VAL: Record<string, number> = Object.fromEntries(
   RANKS.map((r, i) => [r, 12 - i]),
 );
 
-// Cell label for (rowRank, colRank):
-// row === col -> pair (e.g. "AA")
-// rowVal > colVal -> suited (e.g. row A, col K -> "AKs")
-// rowVal < colVal -> offsuit (e.g. row K, col A -> "AKo")
 function cellLabel(rowRank: string, colRank: string): string {
   if (rowRank === colRank) return rowRank + rowRank;
   const rv = RANK_VAL[rowRank];
@@ -21,7 +17,6 @@ function cellLabel(rowRank: string, colRank: string): string {
   return colRank + rowRank + "o";
 }
 
-// Build stable list of all 169 labels.
 const ALL_LABELS: string[] = [];
 for (const r of RANKS) for (const c of RANKS) ALL_LABELS.push(cellLabel(r, c));
 const LABEL_SET = new Set(ALL_LABELS);
@@ -30,7 +25,6 @@ const selected = ref<Set<string>>(new Set());
 const hasUnrepresented = ref(false);
 
 function serialize(set: Set<string>): string {
-  // Emit in canonical grid order (row-major across RANKS) for stability.
   const arr: string[] = [];
   for (const l of ALL_LABELS) if (set.has(l)) arr.push(l);
   return arr.join(",");
@@ -48,7 +42,6 @@ function parse(text: string): { set: Set<string>; unrepresented: boolean } {
   for (const raw of trimmed.split(",")) {
     const atom = raw.trim();
     if (!atom) continue;
-    // Normalize: ranks uppercase, s/o lowercase
     const norm = normalizeAtom(atom);
     if (norm && LABEL_SET.has(norm)) set.add(norm);
     else unrep = true;
@@ -70,7 +63,6 @@ function normalizeAtom(atom: string): string | null {
     if (a === b) return null;
     if (RANK_VAL[a] === undefined || RANK_VAL[b] === undefined) return null;
     if (s !== "s" && s !== "o") return null;
-    // Higher rank first.
     const hi = RANK_VAL[a] > RANK_VAL[b] ? a : b;
     const lo = RANK_VAL[a] > RANK_VAL[b] ? b : a;
     return hi + lo + s;
@@ -78,7 +70,6 @@ function normalizeAtom(atom: string): string | null {
   return null;
 }
 
-// Sync incoming modelValue → internal state.
 watch(
   () => props.modelValue,
   (v) => {
@@ -95,7 +86,6 @@ function emitCurrent() {
   emit("update:modelValue", serialize(selected.value));
 }
 
-// Drag-paint state.
 const painting = ref(false);
 const paintMode = ref<"select" | "deselect">("select");
 
@@ -115,7 +105,6 @@ function applyPaint(label: string) {
   if (paintMode.value === "select") next.add(label);
   else next.delete(label);
   selected.value = next;
-  // Clear any unrepresented notice — user has actively edited via grid.
   hasUnrepresented.value = false;
   emitCurrent();
 }
@@ -123,7 +112,6 @@ function endPaint() {
   if (painting.value) painting.value = false;
 }
 
-// Counter: pair=6, suited=4, offsuit=12.
 const comboCount = computed(() => {
   let n = 0;
   for (const l of selected.value) {
@@ -134,7 +122,6 @@ const comboCount = computed(() => {
   return n;
 });
 
-// Presets.
 function setFrom(labels: Iterable<string>) {
   if (props.disabled) return;
   const next = new Set<string>();
@@ -155,7 +142,6 @@ function presetSuited() {
   setFrom(out);
 }
 function presetBroadway() {
-  // Pairs TT+ AND all non-pair broadway combos (both suited and offsuit).
   const broadwayRanks = ["A", "K", "Q", "J", "T"];
   const out: string[] = ["AA", "KK", "QQ", "JJ", "TT"];
   for (let i = 0; i < broadwayRanks.length; i++) {
@@ -169,38 +155,31 @@ function presetBroadway() {
   setFrom(out);
 }
 function presetTop10() {
-  // Approx Top 10%: 22+, A2s+, K9s+, QTs+, JTs, ATo+, KJo+
   const out: string[] = [];
-  for (const r of RANKS) out.push(r + r); // 22+
-  // A2s+ : all Ax suited
+  for (const r of RANKS) out.push(r + r);
   for (const r of RANKS) if (r !== "A") out.push("A" + r + "s");
-  // K9s+ : K9s, KTs, KJs, KQs
   for (const r of ["Q", "J", "T", "9"]) out.push("K" + r + "s");
-  // QTs+ : QTs, QJs
   for (const r of ["J", "T"]) out.push("Q" + r + "s");
-  // JTs
   out.push("JTs");
-  // ATo+ : ATo, AJo, AQo, AKo
   for (const r of ["K", "Q", "J", "T"]) out.push("A" + r + "o");
-  // KJo+ : KJo, KQo
   for (const r of ["Q", "J"]) out.push("K" + r + "o");
   setFrom(out);
 }
 
 function cellClasses(label: string, isPair: boolean): string {
-  const base = "aspect-square flex items-center justify-center font-mono text-[10px] cursor-pointer select-none border transition-colors";
-  const on = "bg-emerald-600/80 text-emerald-50 border-emerald-400";
-  const off = "bg-slate-800 text-slate-400 hover:bg-slate-700 border-transparent";
-  const ring = isPair ? " ring-1 ring-slate-600/50" : "";
+  const base = "aspect-square flex items-center justify-center font-mono text-2xs cursor-pointer select-none border transition";
+  const on = "bg-primary text-primary-fg border-primary";
+  const off = "bg-elevated text-muted hover:bg-primary-soft hover:text-primary border-transparent";
+  const ring = isPair ? " ring-1 ring-inset ring-line" : "";
   const dis = props.disabled ? " opacity-50 pointer-events-none" : "";
   return base + " " + (selected.value.has(label) ? on : off) + ring + dis;
 }
 </script>
 
 <template>
-  <div class="flex flex-col gap-2 max-w-[520px]">
+  <div class="flex max-w-[520px] flex-col gap-2">
     <div
-      class="grid gap-px bg-slate-900 p-px rounded"
+      class="grid gap-px rounded-md border border-line bg-line p-px"
       :style="{ gridTemplateColumns: 'repeat(13, minmax(1.2rem, 1fr))' }"
       @mouseup="endPaint"
       @mouseleave="endPaint">
@@ -217,29 +196,35 @@ function cellClasses(label: string, isPair: boolean): string {
       </template>
     </div>
 
-    <div class="flex flex-wrap gap-1 items-center">
+    <div class="flex flex-wrap items-center gap-1.5">
       <button
-        class="px-2 py-0.5 text-[11px] rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40"
+        type="button"
+        class="rounded-md border border-line bg-surface px-2 py-0.5 text-2xs font-medium text-fg transition hover:bg-elevated disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         :disabled="disabled" @click="presetAll">All</button>
       <button
-        class="px-2 py-0.5 text-[11px] rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40"
+        type="button"
+        class="rounded-md border border-line bg-surface px-2 py-0.5 text-2xs font-medium text-fg transition hover:bg-elevated disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         :disabled="disabled" @click="presetNone">None</button>
       <button
-        class="px-2 py-0.5 text-[11px] rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40"
+        type="button"
+        class="rounded-md border border-line bg-surface px-2 py-0.5 text-2xs font-medium text-fg transition hover:bg-elevated disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         :disabled="disabled" @click="presetPairs">Pairs (22+)</button>
       <button
-        class="px-2 py-0.5 text-[11px] rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40"
+        type="button"
+        class="rounded-md border border-line bg-surface px-2 py-0.5 text-2xs font-medium text-fg transition hover:bg-elevated disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         :disabled="disabled" @click="presetSuited">Suited (all)</button>
       <button
-        class="px-2 py-0.5 text-[11px] rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40"
+        type="button"
+        class="rounded-md border border-line bg-surface px-2 py-0.5 text-2xs font-medium text-fg transition hover:bg-elevated disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         :disabled="disabled" @click="presetBroadway">Broadway</button>
       <button
-        class="px-2 py-0.5 text-[11px] rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40"
+        type="button"
+        class="rounded-md border border-line bg-surface px-2 py-0.5 text-2xs font-medium text-fg transition hover:bg-elevated disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         :disabled="disabled" @click="presetTop10">Top 10%</button>
     </div>
 
-    <div class="text-[11px] text-slate-500">{{ comboCount }} combos selected</div>
-    <div v-if="hasUnrepresented" class="text-[11px] text-amber-400/80">
+    <div class="font-mono text-2xs text-muted">{{ comboCount }} combos selected</div>
+    <div v-if="hasUnrepresented" class="text-2xs text-warning">
       Some parts of this range can't be shown in the grid.
     </div>
   </div>

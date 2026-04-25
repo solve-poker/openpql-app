@@ -26,10 +26,29 @@ onMounted(() => {
         keymap.of([...defaultKeymap, ...historyKeymap]),
         EditorState.readOnly.of(!!props.readonly),
         EditorView.editable.of(!props.readonly),
+        // CodeMirror theme uses live CSS vars so it follows the design tokens
+        // through theme toggles without a re-mount.
         EditorView.theme({
-          "&": { backgroundColor: "#0f172a", color: "#e2e8f0" },
-          ".cm-gutters": { backgroundColor: "#0f172a", color: "#64748b", border: "none" },
-          ".cm-activeLine": { backgroundColor: "#1e293b" },
+          "&": {
+            backgroundColor: "var(--bg)",
+            color: "var(--fg)",
+          },
+          ".cm-content": { caretColor: "var(--primary)" },
+          ".cm-gutters": {
+            backgroundColor: "var(--bg)",
+            color: "var(--subtle)",
+            border: "none",
+          },
+          ".cm-activeLine": {
+            backgroundColor: "color-mix(in srgb, var(--elevated) 50%, transparent)",
+          },
+          ".cm-activeLineGutter": {
+            backgroundColor: "color-mix(in srgb, var(--elevated) 70%, transparent)",
+          },
+          ".cm-cursor": { borderLeftColor: "var(--primary)" },
+          ".cm-selectionBackground, ::selection": {
+            backgroundColor: "color-mix(in srgb, var(--primary) 25%, transparent)",
+          },
         }),
         EditorView.updateListener.of((u) => {
           if (u.docChanged) emit("update:modelValue", u.state.doc.toString());
@@ -49,5 +68,5 @@ onBeforeUnmount(() => view?.destroy());
 </script>
 
 <template>
-  <div ref="root" class="h-full w-full border border-slate-800 rounded overflow-hidden"></div>
+  <div ref="root" class="h-full w-full overflow-hidden bg-bg"></div>
 </template>

@@ -23,12 +23,12 @@ onMounted(async () => {
 <template>
   <div class="relative inline-block">
     <select
-      class="appearance-none bg-slate-900 border border-slate-800 rounded pl-2 pr-7 py-1 text-sm disabled:opacity-50"
+      class="block appearance-none rounded-lg border border-line bg-bg pl-3 pr-8 py-1.5 text-sm text-fg transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:pointer-events-none"
       :value="modelValue"
       :disabled="disabled"
       @change="emit('update:modelValue', ($event.target as HTMLSelectElement).value)">
       <option v-for="g in games" :key="g" :value="g">{{ g }}</option>
     </select>
-    <span class="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-500 text-xs">▾</span>
+    <span aria-hidden="true" class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-xs text-muted">▾</span>
   </div>
 </template>

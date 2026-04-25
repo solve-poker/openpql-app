@@ -12,7 +12,7 @@ const sorted = computed(() =>
 const leaderIndices = computed<number[]>(() => {
   if (!sorted.value.length) return [];
   const top = sorted.value[0].equity;
-  const threshold = 0.005; // 0.5%
+  const threshold = 0.005;
   return sorted.value
     .filter((r) => Math.abs(r.equity - top) <= threshold)
     .map((r) => r.index);
@@ -68,91 +68,100 @@ async function copyResults() {
 </script>
 
 <template>
-  <div class="h-full flex flex-col overflow-hidden">
-    <div class="bg-slate-900/60 px-3 py-2 text-xs uppercase tracking-wider text-slate-500 font-semibold flex items-center justify-between border-b border-slate-800">
-      <span>Results</span>
-      <div class="flex items-center gap-3">
-        <span v-if="run.running" class="text-emerald-400 animate-pulse normal-case font-normal">● running</span>
+  <div class="flex h-full flex-col overflow-hidden">
+    <div class="flex items-center justify-between border-b border-line bg-elevated/40 px-4 py-2">
+      <span class="text-xs font-semibold uppercase tracking-wider text-muted">Results</span>
+      <div class="flex items-center gap-2">
+        <span v-if="run.running" aria-live="polite" class="inline-flex items-center gap-1.5 rounded-chip border border-info/30 bg-info/10 px-2 py-0.5 text-2xs font-semibold text-info">
+          <span class="h-1.5 w-1.5 rounded-full bg-info motion-safe:animate-pulse"></span>
+          Running
+        </span>
         <template v-else-if="run.results.length || run.trials || run.elapsedMs">
-          <div class="flex items-center gap-1.5 normal-case font-normal">
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800 text-[11px] text-slate-400">
-              <span class="text-slate-500">Trials</span>
-              <span>{{ fmt(run.trials) }}</span>
+          <div class="flex items-center gap-1.5">
+            <span class="inline-flex items-center gap-1.5 rounded-chip border border-line px-2 py-0.5 text-2xs font-medium text-muted">
+              <span class="text-subtle uppercase tracking-wider">Trials</span>
+              <span class="font-mono text-fg">{{ fmt(run.trials) }}</span>
             </span>
-            <span v-if="run.successes > 0" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800 text-[11px] text-slate-400">
-              <span class="text-slate-500">Successes</span>
-              <span>{{ fmt(run.successes) }}</span>
+            <span v-if="run.successes > 0" class="inline-flex items-center gap-1.5 rounded-chip border border-line px-2 py-0.5 text-2xs font-medium text-muted">
+              <span class="text-subtle uppercase tracking-wider">Hits</span>
+              <span class="font-mono text-fg">{{ fmt(run.successes) }}</span>
             </span>
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800 text-[11px] text-slate-400">
-              <span class="text-slate-500">Elapsed</span>
-              <span>{{ fmtElapsedSec(run.elapsedMs) }}</span>
+            <span class="inline-flex items-center gap-1.5 rounded-chip border border-line px-2 py-0.5 text-2xs font-medium text-muted">
+              <span class="text-subtle uppercase tracking-wider">Elapsed</span>
+              <span class="font-mono text-fg">{{ fmtElapsedSec(run.elapsedMs) }}</span>
             </span>
           </div>
         </template>
-        <span v-else class="text-slate-500 normal-case font-normal">idle</span>
+        <span v-else class="text-2xs uppercase tracking-wider text-subtle">idle</span>
         <button
           v-if="run.results.length"
-          class="normal-case font-normal text-slate-300 bg-slate-800 hover:bg-slate-700 rounded px-2 py-0.5 text-[11px]"
+          type="button"
+          class="rounded-md border border-line bg-surface px-2.5 py-0.5 text-2xs font-semibold text-fg transition hover:bg-elevated focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
           @click="copyResults">
           {{ copyLabel }}
         </button>
       </div>
     </div>
 
-    <div class="flex-1 overflow-auto p-3">
+    <div class="flex-1 overflow-auto p-4">
       <!-- Empty state -->
       <div v-if="!run.results.length && !run.stdout.length && !run.stderr.length && !run.running && !run.error"
-        class="h-full flex flex-col items-center justify-center text-center gap-2 text-slate-500">
-        <div class="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center text-slate-500">▶</div>
-        <div class="text-slate-400 text-sm">No results yet</div>
-        <div class="text-xs">
-          Press <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-[10px]">⌘↵</kbd> to run
+        class="flex h-full flex-col items-center justify-center gap-3 text-center text-muted">
+        <div class="grid h-12 w-12 place-items-center rounded-full border border-line text-muted">▶</div>
+        <div class="text-sm font-medium text-fg">No results yet</div>
+        <div class="text-xs text-muted">
+          Press <kbd class="rounded-md border border-line bg-elevated px-1.5 py-0.5 font-mono text-2xs text-fg">⌘↵</kbd> to run
         </div>
       </div>
 
       <!-- Error row -->
       <div v-if="run.error && !run.running"
-        class="rounded border border-rose-900/60 bg-rose-950/30 px-3 py-2 text-rose-300 text-xs mb-3">
-        {{ run.error }}
+        role="alert"
+        class="mb-3 flex items-start gap-3 rounded-lg border border-danger/30 bg-danger/10 p-3 text-xs">
+        <span aria-hidden="true" class="mt-0.5 grid h-5 w-5 place-items-center rounded-full bg-danger text-2xs font-bold text-white">!</span>
+        <div>
+          <div class="font-semibold text-danger">Run failed</div>
+          <div class="mt-0.5 text-muted">{{ run.error }}</div>
+        </div>
       </div>
 
       <!-- Equity table -->
       <table v-if="run.results.length" class="w-full text-sm">
-        <thead class="sticky top-0 bg-slate-950/95 backdrop-blur z-10">
-          <tr class="text-xs uppercase tracking-wider text-slate-500">
-            <th class="text-left py-1 pr-2 font-semibold">Player</th>
-            <th class="text-right py-1 px-2 font-semibold">Equity</th>
-            <th v-if="showCi" class="text-right py-1 px-2 font-semibold">±</th>
-            <th class="py-1 pl-2 font-semibold w-1/2">
+        <thead class="sticky top-0 z-10 bg-surface/95 backdrop-blur">
+          <tr class="text-2xs uppercase tracking-wider text-muted">
+            <th class="py-2 pr-2 text-left font-semibold">Player</th>
+            <th class="px-2 py-2 text-right font-semibold">Equity</th>
+            <th v-if="showCi" class="px-2 py-2 text-right font-semibold">±</th>
+            <th class="w-1/2 py-2 pl-2 font-semibold">
               <span class="sr-only">Bar</span>
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-line">
           <tr
             v-for="r in sorted"
             :key="r.index"
-            class="border-t border-slate-800/60 hover:bg-slate-900/40 transition-colors"
+            class="transition hover:bg-elevated/50"
           >
-            <td class="py-1.5 pr-2 font-mono">
+            <td class="py-2 pr-2 font-mono text-fg">
               <span class="inline-flex items-center gap-1.5">
                 <span
                   v-if="leaderIndices.includes(r.index)"
-                  class="px-1 py-0.5 text-[9px] rounded bg-emerald-500/20 text-emerald-300 uppercase tracking-wide"
-                >LEAD</span>
+                  class="rounded-chip bg-success/10 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-success"
+                >▲ Lead</span>
                 <span>{{ r.name }}</span>
               </span>
             </td>
-            <td class="py-1.5 px-2 text-right font-mono tabular-nums">
+            <td class="px-2 py-2 text-right font-mono tabular-nums text-fg">
               <span :title="tooltipFor(r.equity)">{{ fmtPct(r.equity) }}</span>
             </td>
-            <td v-if="showCi" class="py-1.5 px-2 text-right font-mono tabular-nums text-slate-500 text-[11px]">
+            <td v-if="showCi" class="px-2 py-2 text-right font-mono text-2xs tabular-nums text-muted">
               ±{{ (ci95(r.equity) * 100).toFixed(2) }}%
             </td>
-            <td class="py-1.5 pl-2">
-              <div class="h-2 rounded bg-slate-800 overflow-hidden">
-                <div class="h-full transition-[width] duration-300 ease-out"
-                  :class="leaderIndices.includes(r.index) ? 'bg-emerald-500' : 'bg-slate-600'"
+            <td class="py-2 pl-2">
+              <div class="h-2 overflow-hidden rounded-chip bg-elevated">
+                <div class="h-full transition-[width] duration-300 motion-reduce:transition-none"
+                  :class="leaderIndices.includes(r.index) ? 'bg-primary' : 'bg-subtle'"
                   :style="{ width: Math.max(0, Math.min(100, r.equity * 100)) + '%' }"></div>
               </div>
             </td>
@@ -161,18 +170,19 @@ async function copyResults() {
       </table>
 
       <!-- Errors surfaced prominently -->
-      <div v-if="run.stderr.length" class="mt-3 text-xs font-mono whitespace-pre-wrap text-rose-400">
+      <div v-if="run.stderr.length" class="mt-3 whitespace-pre-wrap font-mono text-xs text-danger">
         <div v-for="(l, i) in run.stderr" :key="'e' + i">{{ l }}</div>
       </div>
 
       <!-- Raw logs disclosure -->
       <div v-if="run.stdout.length" class="mt-3">
         <button
-          class="text-xs text-slate-500 hover:text-slate-300"
+          type="button"
+          class="text-xs text-muted transition hover:text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
           @click="showRaw = !showRaw">
           {{ showRaw ? '▾' : '▸' }} Raw logs ({{ run.stdout.length }})
         </button>
-        <div v-if="showRaw" class="mt-2 p-2 bg-slate-900/60 rounded font-mono text-xs whitespace-pre-wrap max-h-64 overflow-auto border border-slate-800">
+        <div v-if="showRaw" class="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg border border-line bg-bg p-3 font-mono text-xs text-fg">
           <div v-for="(l, i) in run.stdout" :key="'o' + i">{{ l }}</div>
         </div>
       </div>

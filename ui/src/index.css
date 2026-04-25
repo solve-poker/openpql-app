@@ -1,14 +1,160 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/*
+ * Open PQL — design tokens (solve.poker midnight-ink palette).
+ *
+ * Tokens live as runtime CSS variables on :root and .dark; Tailwind's
+ * `@theme inline` block re-exports them so utilities like `bg-primary/20`
+ * pick up live values via color-mix.
+ */
 
-:root { color-scheme: dark; }
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-bg:       var(--bg);
+  --color-surface:  var(--surface);
+  --color-elevated: var(--elevated);
+  --color-fg:       var(--fg);
+  --color-muted:    var(--muted);
+  --color-subtle:   var(--subtle);
+  --color-line:     var(--line);
+
+  --color-primary:        var(--primary);
+  --color-primary-fg:     var(--primary-fg);
+  --color-primary-hover:  var(--primary-hover);
+  --color-primary-soft:   var(--primary-soft);
+
+  --color-accent:      var(--accent);
+  --color-accent-fg:   var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-danger:  var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info:    var(--info);
+
+  --color-felt:       var(--felt);
+  --color-felt-dark:  var(--felt-dark);
+  --color-chip-red:   var(--chip-red);
+  --color-chip-blue:  var(--chip-blue);
+  --color-chip-green: var(--chip-green);
+  --color-chip-black: var(--chip-black);
+  --color-chip-gold:  var(--chip-gold);
+  --color-suit-red:   var(--suit-red);
+  --color-suit-black: var(--suit-black);
+
+  --font-sans:    Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", Inter, ui-sans-serif, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+
+  --radius-card: 0.875rem;
+  --radius-chip: 9999px;
+
+  --shadow-card:     0 1px 2px rgb(0 0 0 / 0.06), 0 6px 16px -4px rgb(0 0 0 / 0.06);
+  --shadow-elevated: 0 12px 32px -8px rgb(0 0 0 / 0.18);
+  --shadow-glow:     0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+  --shadow-ring:     0 0 0 1px var(--line);
+
+  --ease-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:root {
+  color-scheme: light;
+
+  --bg:       rgb(232 238 247);
+  --surface:  rgb(245 248 253);
+  --elevated: rgb(255 255 255);
+
+  --fg:     rgb(14 22 44);
+  --muted:  rgb(76 92 126);
+  --subtle: rgb(146 162 192);
+  --line:   rgb(214 224 238);
+
+  --primary:       rgb(116 34 196);
+  --primary-fg:    rgb(255 255 255);
+  --primary-hover: rgb(92 24 172);
+  --primary-soft:  rgb(234 222 250);
+
+  --accent:      rgb(166 92 18);
+  --accent-fg:   rgb(255 255 255);
+  --accent-soft: rgb(250 230 204);
+
+  --danger:  rgb(196 34 72);
+  --success: rgb(8 128 90);
+  --warning: rgb(156 96 12);
+  --info:    rgb(20 96 188);
+
+  --felt:       rgb(10 92 70);
+  --felt-dark:  rgb(4 62 48);
+  --chip-red:   rgb(210 38 54);
+  --chip-blue:  rgb(28 80 200);
+  --chip-green: rgb(10 132 92);
+  --chip-black: rgb(14 22 44);
+  --chip-gold:  rgb(176 116 22);
+  --suit-red:   rgb(210 38 54);
+  --suit-black: rgb(14 22 44);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --bg:       rgb(8 12 26);
+  --surface:  rgb(16 22 40);
+  --elevated: rgb(26 34 56);
+
+  --fg:     rgb(234 238 250);
+  --muted:  rgb(154 170 204);
+  --subtle: rgb(96 112 148);
+  --line:   rgb(40 52 80);
+
+  --primary:       rgb(184 144 250);
+  --primary-fg:    rgb(44 16 112);
+  --primary-hover: rgb(200 172 252);
+  --primary-soft:  rgb(56 32 104);
+
+  --accent:      rgb(224 156 96);
+  --accent-fg:   rgb(28 14 8);
+  --accent-soft: rgb(78 44 20);
+
+  --danger:  rgb(244 96 128);
+  --success: rgb(48 192 136);
+  --warning: rgb(232 176 82);
+  --info:    rgb(96 168 248);
+
+  --felt:       rgb(10 112 80);
+  --felt-dark:  rgb(4 66 48);
+  --chip-red:   rgb(210 38 54);
+  --chip-blue:  rgb(28 80 200);
+  --chip-green: rgb(10 132 92);
+  --chip-black: rgb(14 22 44);
+  --chip-gold:  rgb(176 116 22);
+  --suit-red:   rgb(210 38 54);
+  --suit-black: rgb(14 22 44);
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tabular numerals on every mono span — columns stay locked. */
+.font-mono { font-variant-numeric: tabular-nums; }
+
+/* CodeMirror host fills its container; font matches the design system. */
 .cm-editor { height: 100%; }
-.cm-scroller { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.cm-scroller { font-family: var(--font-mono); }
 
-button, input, select, textarea { @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60; }
-
+/* Scrollbars in the project palette — picked up in both themes. */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: #334155; border-radius: 6px; border: 2px solid #0f172a; }
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 6px;
+  border: 2px solid var(--bg);
+}
 ::-webkit-scrollbar-track { background: transparent; }
-* { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
