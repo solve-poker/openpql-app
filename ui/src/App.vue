@@ -136,9 +136,9 @@ function onCancel() { run.cancel(); }
 interface Preset { label: string; game: string; board: string; ranges: string[]; }
 const PRESETS: Preset[] = [
   { label: "AA vs random", game: "holdem", board: "", ranges: ["AA", "*"] },
-  { label: "AKs vs QQ+", game: "holdem", board: "", ranges: ["AKs", "QQ+"] },
+  { label: "AKs vs QQ+", game: "holdem", board: "", ranges: ["AxKx", "QQ+"] },
   { label: "BTN 3-bet vs BB call", game: "holdem", board: "",
-    ranges: ["QQ+,AKs,AxKy", "TT-77,AQs,AJs,KQs"] },
+    ranges: ["QQ+,AK", "TT-77,AxQx,AxJx,KxQx"] },
 ];
 
 function bumpAllValidateIds() {
