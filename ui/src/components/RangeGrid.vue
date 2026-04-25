@@ -13,8 +13,10 @@ function cellLabel(rowRank: string, colRank: string): string {
   if (rowRank === colRank) return rowRank + rowRank;
   const rv = RANK_VAL[rowRank];
   const cv = RANK_VAL[colRank];
-  if (rv > cv) return rowRank + colRank + "s";
-  return colRank + rowRank + "o";
+  const hi = rv > cv ? rowRank : colRank;
+  const lo = rv > cv ? colRank : rowRank;
+  if (rv > cv) return hi + "x" + lo + "x";
+  return hi + "x" + lo + "y";
 }
 
 const ALL_LABELS: string[] = [];
@@ -49,6 +51,8 @@ function parse(text: string): { set: Set<string>; unrepresented: boolean } {
   return { set, unrepresented: unrep };
 }
 
+const SUIT_VARS = new Set(["w", "x", "y", "z"]);
+
 function normalizeAtom(atom: string): string | null {
   if (atom.length === 2) {
     const a = atom[0].toUpperCase();
@@ -56,16 +60,17 @@ function normalizeAtom(atom: string): string | null {
     if (a === b && RANK_VAL[a] !== undefined) return a + b;
     return null;
   }
-  if (atom.length === 3) {
-    const a = atom[0].toUpperCase();
-    const b = atom[1].toUpperCase();
-    const s = atom[2].toLowerCase();
-    if (a === b) return null;
-    if (RANK_VAL[a] === undefined || RANK_VAL[b] === undefined) return null;
-    if (s !== "s" && s !== "o") return null;
-    const hi = RANK_VAL[a] > RANK_VAL[b] ? a : b;
-    const lo = RANK_VAL[a] > RANK_VAL[b] ? b : a;
-    return hi + lo + s;
+  if (atom.length === 4) {
+    const r1 = atom[0].toUpperCase();
+    const s1 = atom[1].toLowerCase();
+    const r2 = atom[2].toUpperCase();
+    const s2 = atom[3].toLowerCase();
+    if (r1 === r2) return null;
+    if (RANK_VAL[r1] === undefined || RANK_VAL[r2] === undefined) return null;
+    if (!SUIT_VARS.has(s1) || !SUIT_VARS.has(s2)) return null;
+    const hi = RANK_VAL[r1] > RANK_VAL[r2] ? r1 : r2;
+    const lo = RANK_VAL[r1] > RANK_VAL[r2] ? r2 : r1;
+    return s1 === s2 ? hi + "x" + lo + "x" : hi + "x" + lo + "y";
   }
   return null;
 }
@@ -116,7 +121,7 @@ const comboCount = computed(() => {
   let n = 0;
   for (const l of selected.value) {
     if (l.length === 2) n += 6;
-    else if (l.endsWith("s")) n += 4;
+    else if (l[1] === l[3]) n += 4;
     else n += 12;
   }
   return n;
@@ -136,9 +141,12 @@ function presetNone() { setFrom([]); }
 function presetPairs() {
   setFrom(RANKS.map((r) => r + r));
 }
+function suited(hi: string, lo: string): string { return hi + "x" + lo + "x"; }
+function offsuit(hi: string, lo: string): string { return hi + "x" + lo + "y"; }
+
 function presetSuited() {
   const out: string[] = [];
-  for (const l of ALL_LABELS) if (l.length === 3 && l.endsWith("s")) out.push(l);
+  for (const l of ALL_LABELS) if (l.length === 4 && l[1] === l[3]) out.push(l);
   setFrom(out);
 }
 function presetBroadway() {
@@ -148,8 +156,8 @@ function presetBroadway() {
     for (let j = i + 1; j < broadwayRanks.length; j++) {
       const hi = broadwayRanks[i];
       const lo = broadwayRanks[j];
-      out.push(hi + lo + "s");
-      out.push(hi + lo + "o");
+      out.push(suited(hi, lo));
+      out.push(offsuit(hi, lo));
     }
   }
   setFrom(out);
@@ -157,12 +165,12 @@ function presetBroadway() {
 function presetTop10() {
   const out: string[] = [];
   for (const r of RANKS) out.push(r + r);
-  for (const r of RANKS) if (r !== "A") out.push("A" + r + "s");
-  for (const r of ["Q", "J", "T", "9"]) out.push("K" + r + "s");
-  for (const r of ["J", "T"]) out.push("Q" + r + "s");
-  out.push("JTs");
-  for (const r of ["K", "Q", "J", "T"]) out.push("A" + r + "o");
-  for (const r of ["Q", "J"]) out.push("K" + r + "o");
+  for (const r of RANKS) if (r !== "A") out.push(suited("A", r));
+  for (const r of ["Q", "J", "T", "9"]) out.push(suited("K", r));
+  for (const r of ["J", "T"]) out.push(suited("Q", r));
+  out.push(suited("J", "T"));
+  for (const r of ["K", "Q", "J", "T"]) out.push(offsuit("A", r));
+  for (const r of ["Q", "J"]) out.push(offsuit("K", r));
   setFrom(out);
 }
 
