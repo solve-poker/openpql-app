@@ -1,0 +1,62 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Checkout app
+        uses: actions/checkout@v4
+        with:
+          path: openpql-app
+
+      - name: Checkout sibling open-pql workspace
+        uses: actions/checkout@v4
+        with:
+          repository: solve-poker/Poker-Query-Language
+          path: open-pql
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            openpql-app/daemon
+            openpql-app/wasm
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install just
+        uses: extractions/setup-just@v2
+
+      - name: Install wasm-pack
+        uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack
+
+      - name: Install wrangler
+        run: bun add -g wrangler
+
+      - name: Install UI dependencies
+        working-directory: openpql-app
+        run: just install
+
+      - name: Deploy to Cloudflare Pages
+        working-directory: openpql-app
+        run: just deploy
