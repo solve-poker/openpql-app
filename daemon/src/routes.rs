@@ -67,7 +67,7 @@ async fn handle_ws(mut socket: WebSocket) {
         tokio::select! {
             Some(msg) = rx.recv() => {
                 let json = serde_json::to_string(&msg).unwrap_or_default();
-                if socket.send(Message::Text(json)).await.is_err() {
+                if socket.send(Message::Text(json.into())).await.is_err() {
                     break;
                 }
             }
@@ -117,7 +117,7 @@ async fn run_and_stream(
     std::thread::spawn(move || {
         let mut out = Vec::<u8>::new();
         let mut err = Vec::<u8>::new();
-        let run_result = PQLRunner::run(&src, &mut out, &mut err);
+        let run_result = PQLRunner::run(&src, None, None, &mut out, &mut err);
         for line in String::from_utf8_lossy(&out).lines() {
             let _ = tx_worker.send(ServerMsg::Stdout {
                 line: line.to_string(),

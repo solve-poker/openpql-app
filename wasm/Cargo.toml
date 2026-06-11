@@ -8,10 +8,14 @@ description = "WebAssembly bindings for the Open PQL runner"
 crate-type = ["cdylib"]
 
 [dependencies]
-openpql-runner = { git = "https://github.com/solve-poker/Poker-Query-Language.git", branch = "main" }
-openpql-pql-parser = { git = "https://github.com/solve-poker/Poker-Query-Language.git", branch = "main" }
-openpql-range-parser = { git = "https://github.com/solve-poker/Poker-Query-Language.git", branch = "main" }
-openpql-prelude = { git = "https://github.com/solve-poker/Poker-Query-Language.git", branch = "main", features = ["serde"] }
+# Pinned to the last rev before upstream parallelized the runner with
+# `std::thread::scope` (beab627), which panics on wasm32-unknown-unknown
+# (no thread support). Bump past 4622b2c only once upstream gates the
+# threading behind a cfg or offers a single-threaded path.
+openpql-runner = { git = "https://github.com/solve-poker/Poker-Query-Language.git", rev = "4622b2c" }
+openpql-pql-parser = { git = "https://github.com/solve-poker/Poker-Query-Language.git", rev = "4622b2c" }
+openpql-range-parser = { git = "https://github.com/solve-poker/Poker-Query-Language.git", rev = "4622b2c" }
+openpql-prelude = { git = "https://github.com/solve-poker/Poker-Query-Language.git", rev = "4622b2c", features = ["serde"] }
 
 wasm-bindgen = "0.2"
 js-sys = "0.3"
