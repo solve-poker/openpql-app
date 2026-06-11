@@ -94,7 +94,7 @@ impl Run {
         let this = JsValue::NULL;
         let mut out = Vec::<u8>::new();
         let mut err = Vec::<u8>::new();
-        let run_result = PQLRunner::run(&src, &mut out, &mut err);
+        let run_result = PQLRunner::run(&src, None, None, &mut out, &mut err);
 
         let stdout_tag = JsValue::from_str("stdout");
         let stderr_tag = JsValue::from_str("stderr");
