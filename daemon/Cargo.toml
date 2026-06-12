@@ -9,10 +9,10 @@ name = "open-pql-daemon"
 path = "src/main.rs"
 
 [dependencies]
-openpql-runner = "=0.2.1"
-openpql-pql-parser = "=0.2.1"
-openpql-range-parser = "=0.2.1"
-openpql-prelude = { version = "=0.2.1", features = ["serde"] }
+openpql-runner = "=0.2.2"
+openpql-pql-parser = "=0.2.2"
+openpql-range-parser = "=0.2.2"
+openpql-prelude = { version = "=0.2.2", features = ["serde"] }
 
 axum = { version = "0.8", features = ["ws", "macros"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time"] }

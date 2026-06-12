@@ -18,7 +18,7 @@ pub async fn health() -> Json<serde_json::Value> {
 
 pub async fn games() -> Json<serde_json::Value> {
     Json(json!({
-        "games": ["holdem", "omaha", "shortdeck"],
+        "games": ["holdem", "omaha", "omaha5", "shortdeck"],
         "streets": ["preflop", "flop", "turn", "river"],
     }))
 }

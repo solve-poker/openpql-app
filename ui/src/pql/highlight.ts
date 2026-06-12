@@ -3,7 +3,7 @@ import { StreamLanguage } from "@codemirror/language";
 const KEYWORDS = new Set([
   "select", "from", "where", "and", "or", "not",
   "avg", "count", "sum", "min", "max", "if",
-  "holdem", "omaha", "shortdeck",
+  "holdem", "omaha", "omaha5", "shortdeck",
   "flop", "turn", "river", "preflop",
   "true", "false",
 ]);

@@ -4,7 +4,7 @@
 //!
 //! - `parse_pql(src)` -> `{ok: true, stmts}` | `{ok: false, message}`
 //! - `validate_range(game, text)` -> `{ok: true}` | `{ok: false, message}`
-//! - `games()` -> `["holdem", "omaha", "shortdeck"]`
+//! - `games()` -> `["holdem", "omaha", "omaha5", "shortdeck"]`
 //! - `Run::new(src, on_line, on_done)` — runs synchronously on the
 //!   calling (worker) thread, then invokes the callbacks.
 //!
@@ -75,7 +75,7 @@ pub fn validate_range(game: &str, text: &str) -> JsValue {
 
 #[wasm_bindgen]
 pub fn games() -> JsValue {
-    to_js(&["holdem", "omaha", "shortdeck"])
+    to_js(&["holdem", "omaha", "omaha5", "shortdeck"])
 }
 
 /// A single blocking PQL run. The run happens entirely inside `new()`:

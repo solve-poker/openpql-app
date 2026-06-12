@@ -5,7 +5,7 @@ import { apiGames } from "../api";
 const props = defineProps<{ modelValue: string; disabled?: boolean }>();
 const emit = defineEmits<{ (e: "update:modelValue", v: string): void }>();
 
-const games = ref<string[]>(["holdem", "omaha", "shortdeck"]);
+const games = ref<string[]>(["holdem", "omaha", "omaha5", "shortdeck"]);
 
 onMounted(async () => {
   try {

@@ -8,10 +8,10 @@ description = "WebAssembly bindings for the Open PQL runner"
 crate-type = ["cdylib"]
 
 [dependencies]
-openpql-runner = "=0.2.1"
-openpql-pql-parser = "=0.2.1"
-openpql-range-parser = "=0.2.1"
-openpql-prelude = { version = "=0.2.1", features = ["serde"] }
+openpql-runner = "=0.2.2"
+openpql-pql-parser = "=0.2.2"
+openpql-range-parser = "=0.2.2"
+openpql-prelude = { version = "=0.2.2", features = ["serde"] }
 
 wasm-bindgen = "0.2"
 js-sys = "0.3"
